@@ -1,0 +1,156 @@
+// Getting the canvas element and its context
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// Paddle properties
+const paddleWidth = 100;
+const paddleHeight = 15;
+const paddleMargin = 10;
+const topPaddleY = paddleMargin;
+const bottomPaddleY = canvas.height - paddleHeight - paddleMargin;
+const paddleSpeed = 8;
+
+// Ball properties
+const ballSize = 15;
+let ballX = canvas.width / 2;
+let ballY = canvas.height / 2;
+let ballSpeedX = 5;
+let ballSpeedY = 5;
+
+// Score
+let leftPlayerScore = 0;
+let rightPlayerScore = 0;
+
+// Highest Score and Player
+let highestScore = localStorage.getItem("highestScore") || 0;
+let highestScorePlayer = localStorage.getItem("highestScorePlayer") || "This is your first time";
+
+// Keyboard event listeners
+document.addEventListener("keydown", (e) => {
+    if ((e.key === "a" || e.key === "A") && topPaddleY > 0) {
+        topPaddleY -= paddleSpeed;
+        bottomPaddleY -= paddleSpeed;
+    } else if ((e.key === "d" || e.key === "D") && topPaddleY + paddleHeight < canvas.height / 2) {
+        topPaddleY += paddleSpeed;
+        bottomPaddleY += paddleSpeed;
+    }
+});
+
+// Function to draw the paddles
+function drawPaddles() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect((canvas.width - paddleWidth) / 2, topPaddleY, paddleWidth, paddleHeight);
+    ctx.fillRect((canvas.width - paddleWidth) / 2, bottomPaddleY, paddleWidth, paddleHeight);
+}
+
+// Function to draw the ball
+function drawBall() {
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.closePath();
+}
+
+// Function to update the ball position
+function moveBall() {
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
+
+    // Ball collisions with top and bottom walls
+    if (ballY - ballSize < 0 || ballY + ballSize > canvas.height) {
+        ballSpeedY = -ballSpeedY;
+    }
+
+    // Ball collisions with paddles
+    if (
+        ballX - ballSize < (canvas.width - paddleWidth) / 2 + paddleWidth &&
+        ballX + ballSize > (canvas.width - paddleWidth) / 2 &&
+        ballY - ballSize < topPaddleY + paddleHeight &&
+        ballY + ballSize > topPaddleY
+    ) {
+        ballSpeedY = -ballSpeedY;
+    }
+    if (
+        ballX - ballSize < (canvas.width - paddleWidth) / 2 + paddleWidth &&
+        ballX + ballSize > (canvas.width - paddleWidth) / 2 &&
+        ballY - ballSize < bottomPaddleY + paddleHeight &&
+        ballY + ballSize > bottomPaddleY
+    ) {
+        ballSpeedY = -ballSpeedY;
+    }
+
+    // Scoring
+    if (ballY - ballSize < 0) {
+        rightPlayerScore++;
+        checkHighestScore(rightPlayerScore, "Right Player");
+        resetBall();
+    }
+    if (ballY + ballSize > canvas.height) {
+        leftPlayerScore++;
+        checkHighestScore(leftPlayerScore, "Left Player");
+        resetBall();
+    }
+}
+
+// Function to reset the ball position
+function resetBall() {
+    ballX = canvas.width / 2;
+    ballY = canvas.height / 2;
+    ballSpeedX = -ballSpeedX;
+    ballSpeedY = Math.random() > 0.5 ? -5 : 5;
+}
+
+// Function to draw the scores
+function drawScores() {
+    ctx.font = "30px Arial";
+    ctx.fillText("Left Player: " + leftPlayerScore, 20, 40);
+    ctx.fillText("Right Player: " + rightPlayerScore, 20, canvas.height - 20);
+}
+
+// Function to check and update highest score
+function checkHighestScore(score, player) {
+    if (score > highestScore) {
+        highestScore = score;
+        highestScorePlayer = player;
+        localStorage.setItem("highestScore", highestScore);
+        localStorage.setItem("highestScorePlayer", highestScorePlayer);
+    }
+}
+
+// Function to show the winning player and his score
+function showWinningPlayer() {
+    let winner;
+    let score;
+    if (leftPlayerScore > rightPlayerScore) {
+        winner = "Left Player";
+        score = leftPlayerScore;
+    } else {
+        winner = "Right Player";
+        score = rightPlayerScore;
+    }
+    alert("Winner: " + winner + "\nScore: " + score);
+}
+
+// Function to show highest score and player on game start
+function showHighestScoreOnStart() {
+    alert(
+        "Highest Score: " + highestScore + "\nPlayer: " + highestScorePlayer
+    );
+}
+
+// Main game loop
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPaddles();
+    drawBall();
+    drawScores();
+    moveBall();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Start the game loop
+showHighestScoreOnStart();
+gameLoop();
