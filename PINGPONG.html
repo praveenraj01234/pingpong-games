@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Advanced Ping Pong Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      background: #333;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="pingPongCanvas" width="800" height="400"></canvas>
+
+  <script>
+    // Initialization
+    const canvas = document.getElementById("pingPongCanvas");
+    const ctx = canvas.getContext("2d");
+    const paddleWidth = 15;
+    const paddleHeight = 100;
+    const ballSize = 15;
+    const paddleSpeed = 8;
+    let leftPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let rightPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballSpeedX = 5;
+    let ballSpeedY = 5;
+    let leftPlayerScore = 0;
+    let rightPlayerScore = 0;
+    const maxScore = 5;
+
+    // Keyboard event listeners
+    let upArrowPressed = false;
+    let downArrowPressed = false;
+    let wKeyPressed = false;
+    let sKeyPressed = false;
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+
+    function handleKeyDown(event) {
+      if (event.key === "ArrowUp") {
+        upArrowPressed = true;
+      } else if (event.key === "ArrowDown") {
+        downArrowPressed = true;
+      } else if (event.key === "w") {
+        wKeyPressed = true;
+      } else if (event.key === "s") {
+        sKeyPressed = true;
+      }
+    }
+
+    function handleKeyUp(event) {
+      if (event.key === "ArrowUp") {
+        upArrowPressed = false;
+      } else if (event.key === "ArrowDown") {
+        downArrowPressed = false;
+      } else if (event.key === "w") {
+        wKeyPressed = false;
+      } else if (event.key === "s") {
+        sKeyPressed = false;
+      }
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballSpeedX = -ballSpeedX;
+    }
+
+    function drawPaddle(x, y) {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(x, y, paddleWidth, paddleHeight);
+    }
+
+    function drawBall() {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawScores() {
+      ctx.font = "40px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.fillText(leftPlayerScore, canvas.width / 4, 50);
+      ctx.fillText(rightPlayerScore, (canvas.width * 3) / 4, 50);
+    }
+
+    function update() {
+      // Move paddles
+      if (upArrowPressed && leftPaddleY > 0) {
+        leftPaddleY -= paddleSpeed;
+      }
+      if (downArrowPressed && leftPaddleY < canvas.height - paddleHeight) {
+        leftPaddleY += paddleSpeed;
+      }
+      if (wKeyPressed && rightPaddleY > 0) {
+        rightPaddleY -= paddleSpeed;
+      }
+      if (sKeyPressed && rightPaddleY < canvas.height - paddleHeight) {
+        rightPaddleY += paddleSpeed;
+      }
+
+      // Move ball
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Ball collisions with walls
+      if (ballY <= 0 || ballY >= canvas.height) {
+        ballSpeedY = -ballSpeedY;
+      }
+
+      // Ball collisions with paddles
+      if (
+        ballX <= paddleWidth &&
+        ballY + ballSize >= leftPaddleY &&
+        ballY <= leftPaddleY + paddleHeight
+      ) {
+        ballSpeedX = -ballSpeedX;
+      } else if (
+        ballX >= canvas.width - paddleWidth - ballSize &&
+        ballY + ballSize >= rightPaddleY &&
+        ballY <= rightPaddleY + paddleHeight
+      ) {
+        ballSpeedX = -ballSpeedX;
+      }
+
+      // Scoring
+      if (ballX < 0) {
+        rightPlayerScore++;
+        if (rightPlayerScore === maxScore) {
+          alert("Right player wins!");
+          resetGame();
+        } else {
+          resetBall();
+        }
+      } else if (ballX > canvas.width) {
+        leftPlayerScore++;
+        if (leftPlayerScore === maxScore) {
+          alert("Left player wins!");
+          resetGame();
+        } else {
+          resetBall();
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPaddle(0, leftPaddleY);
+      drawPaddle(canvas.width - paddleWidth, rightPaddleY);
+      drawBall();
+      drawScores();
+    }
+
+    function resetGame() {
+      leftPlayerScore = 0;
+      rightPlayerScore = 0;
+      resetBall();
+      leftPaddleY = canvas.height / 2 - paddleHeight / 2;
+      rightPaddleY = canvas.height / 2 - paddleHeight / 2;
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
